@@ -138,8 +138,9 @@ struct BlogWebController {
         let req = args.req
         let metadata = args.metadata
 
-        return ListLoader<BlogPostModel>().paginate(req, BlogPostModel.queryJoinPublicMetadata(on: req.db).with(\.$categories))
-        .flatMap { pagination in
+        return ListLoader<BlogPostModel>(beforeQuery: { _, qb in
+            BlogPostModel.queryJoinPublicMetadata(on: req.db).with(\.$categories)
+        }).paginateAll(req).flatMap { pagination in
             req.tau.render(template: "Blog/Posts", context: [
                 "metadata": metadata.encodeToTemplateData(),
                 "posts": .array(pagination.items.map { $0.templateDataWithJoinedMetadata }),
